@@ -24,5 +24,14 @@ class HBaseHelper(val configuration: Configuration) extends Closeable {
     splitKeysOpt.fold(admin.createTable(desc))(splitKeys => admin.createTable(desc, splitKeys))
   }
 
+  def disableTable(table: TableName): Unit = admin.disableTable(table)
+
+  def dropTable(table: TableName): Unit = {
+    if (existsTable(table)) {
+      if (admin.isTableEnabled(table)) disableTable(table)
+      admin.deleteTable(table)
+    }
+  }
+
   def close(): Unit = connection.close()
 }
