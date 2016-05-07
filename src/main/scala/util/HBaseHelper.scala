@@ -3,8 +3,12 @@ package util
 import java.io.Closeable
 
 import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.hbase.{HColumnDescriptor, HTableDescriptor, TableName}
-import org.apache.hadoop.hbase.client.{Admin, Connection, ConnectionFactory}
+import org.apache.hadoop.hbase.client._
+import scala.collection.JavaConverters._
+
+case class CFValues(qual: String, ts: Long, value: String)
 
 class HBaseHelper(val configuration: Configuration) extends Closeable {
 
@@ -31,6 +35,50 @@ class HBaseHelper(val configuration: Configuration) extends Closeable {
       if (admin.isTableEnabled(table)) disableTable(table)
       admin.deleteTable(table)
     }
+  }
+
+  def put(table: TableName, row: String, fam: String, qual: String, ts: Long, value: String): Unit = {
+    val tbl = connection.getTable(table)
+    val put = new Put(Bytes.toBytes(fam.toByte))
+    put.addColumn(Bytes.toBytes(fam), Bytes.toBytes(qual), ts, Bytes.toBytes(value))
+    tbl.put(put)
+    tbl.close()
+  }
+
+  def put(table: TableName, rows: List[String], fams: List[String], cfValues: List[CFValues]) = {
+    val tbl = connection.getTable(table)
+    rows.foreach { r =>
+      val put = new Put(Bytes.toBytes(r))
+      fams.foreach { fam =>
+        cfValues.foreach { cfv =>
+          println("Adding: " + r + " " + fam + " " + cfv.qual + " " + cfv.ts + " " + cfv.value)
+          put.addColumn(Bytes.toBytes(fam), Bytes.toBytes(cfv.qual), cfv.ts, Bytes.toBytes(cfv.value))
+        }
+      }
+      tbl.put(put)
+    }
+    tbl.close()
+  }
+
+  def dump(table: TableName, rows: List[String], fams: List[String] = Nil, quals: List[String] = Nil) = {
+    val tbl = connection.getTable(table)
+    val gets = rows.map { row =>
+      val get = new Get(Bytes.toBytes(row))
+      get.setMaxVersions()
+      fams.foreach { fam =>
+        quals.foreach { qual =>
+          get.addColumn(Bytes.toBytes(fam), Bytes.toBytes(qual))
+        }
+      }
+      get
+    }
+    val results = tbl.get(gets.asJava)
+    results.foreach { result =>
+      result.rawCells().foreach { cell =>
+        println("Cell: " + cell + ", Value: " + Bytes.toString(cell.getValueArray, cell.getValueOffset, cell.getValueLength))
+      }
+    }
+    tbl.close()
   }
 
   def close(): Unit = connection.close()
