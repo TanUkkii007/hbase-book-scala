@@ -12,8 +12,9 @@ libraryDependencies ++= Seq(
   "org.apache.hbase" % "hbase-protocol" % hbaseVersion,
   "org.apache.hbase" % "hbase-hadoop-compat" % hbaseVersion,
   "org.apache.zookeeper" % "zookeeper" % "3.4.6",
-  "com.google.protobuf" % "protobuf-java" % "2.6.1",
+  "com.google.protobuf" % "protobuf-java" % "2.5.0",
   "org.apache.htrace" % "htrace-core" % "3.1.0-incubating",
   "io.netty" % "netty-all" % "4.0.23.Final",
-  "com.google.guava" % "guava" % "15.0"
+  "com.google.guava" % "guava" % "12.0.1",
+  "com.yammer.metrics" % "metrics-core" % "2.2.0"
 )
