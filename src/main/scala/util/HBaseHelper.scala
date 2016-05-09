@@ -1,6 +1,8 @@
 package util
 
 import java.io.Closeable
+import scala.collection.immutable.IndexedSeq
+import scala.util.Random
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.util.Bytes
@@ -80,6 +82,28 @@ class HBaseHelper(val configuration: Configuration) extends Closeable {
     }
     tbl.close()
   }
+
+  def fillTable(table: TableName, startRow: Int, endRow: Int, numCols: Int, pad: Int, setTimestamp: Boolean, random: Boolean, colfams: List[String]): Unit = {
+    val tbl = connection.getTable(table)
+    val rand = new Random()
+    startRow to endRow foreach { row =>
+      1 to numCols foreach { col =>
+        val put = new Put(Bytes.toBytes(s"row-${padNum(row, pad)}"))
+        colfams.foreach { cf =>
+          val colName = s"col-${padNum(col, pad)}"
+          val value = if (random) rand.nextInt(numCols).toString else padNum(row, pad) + "." + padNum(col, pad)
+          if (setTimestamp)
+            put.addColumn(Bytes.toBytes(cf), Bytes.toBytes(colName), Bytes.toBytes(value))
+          else
+            put.addColumn(Bytes.toBytes(cf), Bytes.toBytes(colName), Bytes.toBytes(value))
+        }
+        tbl.put(put)
+      }
+    }
+    tbl.close()
+  }
+
+  def padNum(num: Int, pad: Int): String = if (pad > 0) num.toString.reverse.padTo(pad, '0').reverse.toString else num.toString
 
   def close(): Unit = connection.close()
 }
