@@ -45,6 +45,7 @@ object FamilyFilterExample extends App {
   val result2 = table.get(get2)
   println("Result of get(): " + result2)
 
+  helper.close()
   table.close()
   connection.close()
 }
