@@ -4,6 +4,8 @@ val hbaseVersion = "1.1.4"
 
 val hadoopVersion = "2.6.2"
 
+scalaVersion := "2.11.8"
+
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-common" % hadoopVersion,
   "org.apache.hadoop" % "hadoop-client" % hadoopVersion,
