@@ -11,6 +11,7 @@ libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % hadoopVersion,
   "org.apache.hbase" % "hbase-common" % hbaseVersion,
   "org.apache.hbase" % "hbase-client" % hbaseVersion,
+  "org.apache.hbase" % "hbase-server" % hbaseVersion,
   "org.apache.hbase" % "hbase-protocol" % hbaseVersion,
   "org.apache.hbase" % "hbase-hadoop-compat" % hbaseVersion,
   "org.apache.zookeeper" % "zookeeper" % "3.4.6",
