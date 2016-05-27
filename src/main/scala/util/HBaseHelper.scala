@@ -1,7 +1,8 @@
 package util
 
 import java.io.Closeable
-import scala.collection.immutable.IndexedSeq
+import org.apache.hadoop.fs.Path
+
 import scala.util.Random
 
 import org.apache.hadoop.conf.Configuration
@@ -27,6 +28,17 @@ class HBaseHelper(val configuration: Configuration) extends Closeable {
       coldef.setMaxVersions(maxVersions)
       desc.addFamily(coldef)
     }
+    splitKeysOpt.fold(admin.createTable(desc))(splitKeys => admin.createTable(desc, splitKeys))
+  }
+
+  def createTableWithCoprocessor(table: TableName, colfams: Seq[String], className: String, priority: Int, maxVersions: Int = 1, splitKeysOpt: Option[Array[Array[Byte]]] = None) = {
+    val desc = new HTableDescriptor(table)
+    colfams.foreach { cf =>
+      val coldef = new HColumnDescriptor(cf)
+      coldef.setMaxVersions(maxVersions)
+      desc.addFamily(coldef)
+    }
+    desc.addCoprocessor(className, null, priority, null)
     splitKeysOpt.fold(admin.createTable(desc))(splitKeys => admin.createTable(desc, splitKeys))
   }
 
