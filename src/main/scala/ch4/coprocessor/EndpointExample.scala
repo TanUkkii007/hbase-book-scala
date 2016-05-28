@@ -51,7 +51,8 @@ object EndpointExample extends App {
   val table = connection.getTable(tableName)
   try {
     val request = RowCounterProtos.CountRequest.getDefaultInstance
-    val results = table.coprocessorService(classOf[RowCounterProtos.RowCountService], null, null, (counter: RowCounterProtos.RowCountService) => {
+    //startKey, endKey can be a null
+    val results = table.coprocessorService(classOf[RowCounterProtos.RowCountService], HConstants.EMPTY_START_ROW, HConstants.EMPTY_END_ROW, (counter: RowCounterProtos.RowCountService) => {
       val rpcCallback = new BlockingRpcCallback[RowCounterProtos.CountResponse]()
       counter.getRowCount(null, request, rpcCallback)
       val response = rpcCallback.get()
