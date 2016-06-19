@@ -115,6 +115,38 @@ class HBaseHelper(val configuration: Configuration) extends Closeable {
     tbl.close()
   }
 
+  def fillTableRandom(table: TableName,
+                      minRow: Int, maxRow: Int, padRow: Int,
+                      minCol: Int, maxCol: Int, padCol: Int,
+                      minVal: Int, maxVal: Int, padVal: Int,
+                      setTimestamp: Boolean, colfams: List[String]) = {
+    val tbl = connection.getTable(table)
+    val rnd = new Random()
+    val maxRows = minRow + rnd.nextInt(maxRow - minRow)
+    (0 until maxRows).foreach { row =>
+      val maxCols = minCol + rnd.nextInt(maxCol - minCol)
+
+      (0 until maxCols).foreach { col =>
+        val rowNum = rnd.nextInt(maxRow - minRow)
+        val put = new Put(Bytes.toBytes(s"row-${padNum(rowNum, padRow)}"))
+
+        colfams.foreach { cf =>
+          val colNum = rnd.nextInt(maxCol - minCol + 1)
+          val colName = s"col-${padNum(colNum, padCol)}"
+          val valNum = rnd.nextInt(maxVal - minVal + 1)
+          val value = s"val-${padNum(valNum, padCol)}"
+          if (setTimestamp) {
+            put.addColumn(Bytes.toBytes(cf), Bytes.toBytes(colName), col, Bytes.toBytes(value))
+          } else {
+            put.addColumn(Bytes.toBytes(cf), Bytes.toBytes(colName), Bytes.toBytes(value))
+          }
+        }
+        tbl.put(put)
+      }
+    }
+    tbl.close()
+  }
+
   def padNum(num: Int, pad: Int): String = if (pad > 0) num.toString.reverse.padTo(pad, '0').reverse.toString else num.toString
 
   def close(): Unit = connection.close()
