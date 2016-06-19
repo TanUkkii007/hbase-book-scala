@@ -95,7 +95,7 @@ class HBaseHelper(val configuration: Configuration) extends Closeable {
     tbl.close()
   }
 
-  def fillTable(table: TableName, startRow: Int, endRow: Int, numCols: Int, pad: Int, setTimestamp: Boolean, random: Boolean, colfams: List[String]): Unit = {
+  def fillTable(table: TableName, startRow: Int, endRow: Int, numCols: Int, pad: Int = -1, setTimestamp: Boolean = false, random: Boolean = false, colfams: List[String]): Unit = {
     val tbl = connection.getTable(table)
     val rand = new Random()
     startRow to endRow foreach { row =>
