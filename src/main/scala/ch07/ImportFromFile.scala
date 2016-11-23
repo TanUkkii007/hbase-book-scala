@@ -3,12 +3,15 @@ package ch07
 import org.apache.commons.cli.{CommandLine, HelpFormatter, PosixParser, Options}
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.logging.LogFactory
+import org.apache.hadoop.fs.Path
+import org.apache.hadoop.hbase.mapreduce.TableOutputFormat
 import org.apache.hadoop.hbase.{HBaseConfiguration, KeyValue}
 import org.apache.hadoop.hbase.client.{Put, Mutation}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.util.Bytes
-import org.apache.hadoop.io.{Text, LongWritable}
-import org.apache.hadoop.mapreduce.Mapper
+import org.apache.hadoop.io.{Writable, Text, LongWritable}
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat
+import org.apache.hadoop.mapreduce.{Job, Mapper}
 import org.apache.hadoop.util.GenericOptionsParser
 import org.slf4j.Logger
 import scala.collection.JavaConverters._
@@ -92,6 +95,22 @@ object ImportFromFile {
     if (cmd.hasOption("d")) {
       conf.set("conf.debug", "true")
     }
+
+    val table = cmd.getOptionValue("t")
+    val input = cmd.getOptionValue("i")
+    val column = cmd.getOptionValue("c")
+    conf.set("conf.column", column)
+
+    val job = Job.getInstance(conf, s"Import from file $input into table $table")
+    job.setJarByClass(getClass)
+    job.setMapperClass(classOf[ImportMapper])
+    job.setOutputFormatClass(classOf[TableOutputFormat[_]])
+    job.getConfiguration.set(TableOutputFormat.OUTPUT_TABLE, table)
+    job.setOutputKeyClass(classOf[Writable])
+    job.setNumReduceTasks(0)
+    FileInputFormat.addInputPath(job, new Path(input))
+
+    System.exit(if (job.waitForCompletion(true)) 0 else 1)
   }
 
 }
