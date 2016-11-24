@@ -22,3 +22,16 @@ libraryDependencies ++= Seq(
   "com.yammer.metrics" % "metrics-core" % "2.2.0",
   "com.google.protobuf" % "protobuf-java" % "2.6.1"
 )
+
+test in assembly := {}
+
+assemblyMergeStrategy in assembly := {
+  case PathList(ps@_*) if ps.last endsWith ".properties" => MergeStrategy.first
+  case PathList(ps@_*) if ps.last endsWith ".class" => MergeStrategy.first
+  case PathList(ps@_*) if ps.last endsWith ".xsd" => MergeStrategy.first
+  case PathList(ps@_*) if ps.last endsWith ".dtd" => MergeStrategy.first
+  case PathList(ps@_*) if ps.last endsWith ".so" => MergeStrategy.first
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
