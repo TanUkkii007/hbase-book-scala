@@ -20,7 +20,10 @@ libraryDependencies ++= Seq(
   "io.netty" % "netty-all" % "4.0.23.Final",
   "com.google.guava" % "guava" % "12.0.1",
   "com.yammer.metrics" % "metrics-core" % "2.2.0",
-  "com.google.protobuf" % "protobuf-java" % "2.6.1"
+  "com.google.protobuf" % "protobuf-java" % "2.6.1",
+  "io.circe" %% "circe-core" % "0.6.0",
+  "io.circe" %% "circe-generic" % "0.6.0",
+  "io.circe" %% "circe-parser" % "0.6.0"
 )
 
 test in assembly := {}
