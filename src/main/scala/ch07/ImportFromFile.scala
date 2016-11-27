@@ -77,8 +77,7 @@ object ImportFromFile {
         System.err.println("ERROR: " + e.getMessage() + "\n")
         val formatter = new HelpFormatter()
         formatter.printHelp(NAME + " ", options, true)
-        System.exit(-1)
-        ???
+        sys.exit(-1)
     }
 
     if (cmd.hasOption("d")) {
