@@ -3,14 +3,18 @@ package ch07
 import java.lang.Iterable
 
 import org.apache.commons.cli.{CommandLine, HelpFormatter, PosixParser, Options}
-import org.apache.hadoop.hbase.client.Result
+import org.apache.hadoop.fs.Path
+import org.apache.hadoop.hbase.{KeyValue, HBaseConfiguration}
+import org.apache.hadoop.hbase.client.{Scan, Result}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
-import org.apache.hadoop.hbase.mapreduce.TableMapper
+import org.apache.hadoop.hbase.mapreduce.{TableMapReduceUtil, TableMapper}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.io.{Text, IntWritable}
 import io.circe._
 import io.circe.parser._
-import org.apache.hadoop.mapreduce.{Reducer, Mapper}
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat
+import org.apache.hadoop.mapreduce.{Job, Reducer, Mapper}
+import org.apache.hadoop.util.GenericOptionsParser
 import org.apache.log4j.{Level, Logger}
 import scala.collection.JavaConverters._
 
@@ -90,6 +94,39 @@ object AnalyzeData {
       println("DEBUG ON")
     }
     cmd
+  }
+
+  def main(args: Array[String]) = {
+    val conf = HBaseConfiguration.create()
+    val otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs
+    val cmd = parseArgs(otherArgs)
+    if (cmd.hasOption("d")) {
+      conf.set("conf.debug", "true")
+    }
+    val table = cmd.getOptionValue("t")
+    val column = cmd.getOptionValue("c")
+    val output = cmd.getOptionValue("o")
+
+    val scan = new Scan()
+    if (column != null) {
+      val colKey = KeyValue.parseColumn(Bytes.toBytes(column))
+      if (colKey.length > 1) {
+        scan.addColumn(colKey(0), colKey(1))
+      } else {
+        scan.addFamily(colKey(0))
+      }
+    }
+
+    val job = Job.getInstance(conf, "Analyze data in " + table)
+    job.setJarByClass(getClass)
+    TableMapReduceUtil.initTableMapperJob(table, scan, classOf[AnalyzeMapper], classOf[Text], classOf[IntWritable], job)
+    job.setReducerClass(classOf[AnalyzeReducer])
+    job.setOutputKeyClass(classOf[Text])
+    job.setOutputValueClass(classOf[IntWritable])
+    job.setNumReduceTasks(1)
+    FileOutputFormat.setOutputPath(job, new Path(output))
+
+    System.exit(if (job.waitForCompletion(true)) 0 else 1)
   }
 
 }
